@@ -1,20 +1,45 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { reqResApi } from '../api/reqRes';
 import { ReqResListado, Usuario } from '../interfaces/reqRes';
 
+let pagina = 1;
 
 export const Usuarios = () => {
 
-    const [usuarios, setUsuarios] = useState <Usuario[]>([])
+    const [usuarios, setUsuarios] = useState <Usuario[]>([]);
+
+    const paginaRef = useRef(1);
 
     useEffect(() => {
-      
-        //Llamar al API
-        reqResApi.get<ReqResListado>('/users').then( resp => {
-            setUsuarios(resp.data.data);
-        } ).catch( err => console.log(err) )
-      
+        
+      cargarUsuarios(); 
     }, [])
+
+   
+    const cargarUsuarios = async () => {
+        
+        const resp = await reqResApi.get<ReqResListado>('/users', {
+            params: {
+                page: paginaRef.current
+            }
+        })
+        
+        
+        if (resp.data.data.length > 0) {
+
+            
+            setUsuarios(resp.data.data);
+            paginaRef.current++;
+            
+
+        } else {
+            
+            alert('No hay mas registros')
+        }
+        
+        
+
+    }
 
     const renderItem = (usuario: Usuario) => {
 
@@ -43,8 +68,8 @@ export const Usuarios = () => {
   return (
     <>
         <h3>Usuarios:</h3>
-        <table className="table">
-            <thead>
+        <table className="table"> 
+             <thead>
                 <tr>
                     <th>Avatar</th>
                     <th>Nombre</th>
@@ -53,11 +78,14 @@ export const Usuarios = () => {
 
             </thead>
             <tbody>
-                {usuarios.map( usuario => renderItem(usuario) )}
+                 {usuarios.map( usuario => renderItem(usuario) )} 
             </tbody>
         </table>
 
-        <button className='btn btn-primary'>
+        <button 
+            className='btn btn-primary'
+            onClick={cargarUsuarios}
+        >
             Siguientes
         </button>
     </>
